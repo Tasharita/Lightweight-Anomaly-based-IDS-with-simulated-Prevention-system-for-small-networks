@@ -5,9 +5,20 @@ import threading
 import pandas as pd
 import os
 
+# ── LOAD WHITELIST ──
+WHITELIST_FILE = "whitelist.txt"
+
+def load_whitelist():
+    if os.path.exists(WHITELIST_FILE):
+        with open(WHITELIST_FILE, "r") as f:
+            return {line.strip() for line in f if line.strip()}
+    return set()
+
+WHITELIST = load_whitelist()
+
 # --- Thresholds ---
 PACKET_THRESHOLD = 500   # packets per 10 seconds -> DoS detection
-PORT_THRESHOLD = 300     # unique ports per 10 seconds -> port scan detection
+PORT_THRESHOLD = 100     # unique ports per 10 seconds -> port scan detection
 TIME_WINDOW = 10         # seconds
 
 # --- counters ----
@@ -50,25 +61,30 @@ def process_packet(packet):
     if IP in packet:
         src = packet[IP].src
 
-        # ignore from blacklisted IPs
+        # Ignore trusted devices
+        if src in WHITELIST:
+            return
+
+        # Ignore already-blacklisted IPs
         if src in blacklist:
             return
 
         with lock:
-            # update counters
+
+            # Count packets
             packet_counts[src] += 1
 
+            # Track destination ports
             if TCP in packet:
-                tcp_flags = packet[TCP].flags
 
-
-                # Count only SYN packets
-                if tcp_flags == 0x02:
+                # Only count SYN packets
+                if packet[TCP].flags == 0x02:
                     port_tracker[src].add(packet[TCP].dport)
+
             elif UDP in packet:
                 port_tracker[src].add(packet[UDP].dport)
 
-            # check if time window has ended
+            # Check thresholds every time window
             if time.time() - window_start >= TIME_WINDOW:
                 check_thresholds()
                 packet_counts.clear()
@@ -78,33 +94,67 @@ def process_packet(packet):
 
 # --- Detection logic ---
 def check_thresholds():
-    for ip, count in packet_counts.items():
-        if ip in WHITELIST:
-            continue
-        if count > PACKET_THRESHOLD and ip not in blacklist:
-            blacklist.add(ip)
-            log_alert(ip,"DOS / TRAFFIC SPIKE", count)
 
-    for ip,ports in port_tracker.items():
-        if len(ports) > PORT_THRESHOLD and ip not in blacklist:
+    for ip in packet_counts:
+
+        packet_count = packet_counts[ip]
+        unique_ports = len(port_tracker[ip])
+
+        # Skip already blacklisted IPs
+        if ip in blacklist:
+            continue
+
+        # ---- Port Scan Detection (Priority) ----
+        if unique_ports > PORT_THRESHOLD:
+
             blacklist.add(ip)
-            log_alert(ip, "PORT SCAN", len(ports))
+
+            log_alert(
+                ip,
+                "PORT SCAN",
+                unique_ports
+            )
+
+        # ---- DoS Detection ----
+        elif packet_count > PACKET_THRESHOLD:
+
+            blacklist.add(ip)
+
+            log_alert(
+                ip,
+                "DOS / TRAFFIC SPIKE",
+                packet_count
+            )
 
 # --- Main ---
-print("=" * 55)
-print(" Lightweight Anomaly-Based IDS")
-print(" Monitoring traffic on eth0...")
-print(f" DoS Threshold:       {PACKET_THRESHOLD} packets / {TIME_WINDOW}s")
-print(f" Port Scan Threshold: {PORT_THRESHOLD} unique ports / {TIME_WINDOW}s")
-print("=" * 55)
-print("[*] Press ctrl+C to stop\n")
+print("=" * 60)
+print("      Lightweight Anomaly-Based IDS")
+print("=" * 60)
+
+print(f"Monitoring Interface : eth0")
+print(f"Detection Window     : {TIME_WINDOW} seconds")
+print(f"DoS Threshold        : {PACKET_THRESHOLD} packets")
+print(f"Port Scan Threshold  : {PORT_THRESHOLD} unique ports")
+print()
+
+print(f"Trusted Hosts Loaded : {len(WHITELIST)}")
+
+for ip in sorted(WHITELIST):
+    print(f"   ✓ {ip}")
+
+print()
+
+print("[*] Monitoring started...")
+print("[*] Press Ctrl+C to stop.\n")
 
 try:
     sniff(iface="eth0", prn=process_packet, store=False)
 except KeyboardInterrupt:
     print("\n[*] Stopping IDS...")
     if alerts:
-        print(f"[*] {len(lerts)} alerts logged to alerts.csv")
+        print(f"[*] {len(alerts)} alerts logged to alerts.csv")
     else:
         print("[*] No alerts generated")
+
+    print(f"[*] Blacklisted IPs: {len(blacklist)}")
     print("[*] IDS stopped")

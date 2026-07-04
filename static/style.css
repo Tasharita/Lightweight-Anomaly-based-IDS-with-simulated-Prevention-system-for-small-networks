@@ -1,0 +1,213 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+    color:#2c3e50;
+}
+
+.header{
+    background:#2c3e50;
+    color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:25px 40px;
+}
+
+.header h1{
+    font-size:30px;
+}
+
+.header p{
+    color:#d0d7de;
+    margin-top:5px;
+}
+
+.status{
+    text-align:right;
+    font-size:15px;
+}
+
+.status-dot{
+    width:12px;
+    height:12px;
+    background:#2ecc71;
+    display:inline-block;
+    border-radius:50%;
+    margin-right:8px;
+}
+
+.cards{
+
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:20px;
+    padding:30px;
+
+}
+
+.card{
+
+    background:white;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+    border-top:5px solid #3498db;
+    transition:.2s;
+
+}
+
+.card:hover{
+
+    transform:translateY(-3px);
+
+}
+
+.card h3{
+
+    color:#7f8c8d;
+    font-size:15px;
+    margin-bottom:15px;
+
+}
+
+.card h2{
+
+    font-size:34px;
+    color:#2c3e50;
+
+}
+
+.charts{
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+    padding:0 30px 30px 30px;
+
+}
+
+.chart-card{
+
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+}
+
+.chart-card h3{
+
+    margin-bottom:20px;
+    color:#2c3e50;
+
+}
+
+.tables{
+
+    display:grid;
+    gap:30px;
+    padding:0 30px 30px 30px;
+
+}
+
+.table-card{
+
+    background:white;
+    border-radius:12px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+    padding:20px;
+
+}
+
+.table-card h3{
+
+    margin-bottom:20px;
+
+}
+
+table{
+
+    width:100%;
+    border-collapse:collapse;
+
+}
+
+th{
+
+    background:#34495e;
+    color:white;
+    padding:14px;
+    text-align:left;
+
+}
+
+td{
+
+    padding:13px;
+    border-bottom:1px solid #ecf0f1;
+
+}
+
+tr:hover{
+
+    background:#f8f9fb;
+
+}
+
+.badge{
+
+    padding:5px 12px;
+    border-radius:30px;
+    color:white;
+    font-size:12px;
+    font-weight:bold;
+
+}
+
+.high{
+
+    background:#e74c3c;
+
+}
+
+.medium{
+
+    background:#f39c12;
+
+}
+
+.low{
+
+    background:#27ae60;
+
+}
+
+@media(max-width:900px){
+
+    .charts{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .header{
+
+        flex-direction:column;
+        text-align:center;
+        gap:15px;
+
+    }
+
+    .status{
+
+        text-align:center;
+
+    }
+
+}

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lightweight IDS Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+</head>
+
+<body>
+
+<div class="header">
+
+    <div>
+
+        <h1>🛡 Lightweight Anomaly-Based IDS</h1>
+
+        <p>Network Monitoring Dashboard</p>
+
+    </div>
+
+    <div class="status">
+
+        <span class="status-dot"></span>
+
+        Monitoring Active
+
+        <br>
+
+        <small>Last Updated: {{ last_updated }}</small>
+
+    </div>
+
+</div>
+
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>Total Alerts</h3>
+
+        <h2>{{ total_alerts }}</h2>
+
+    </div>
+
+    <div class="card">
+
+        <h3>DoS Alerts</h3>
+
+        <h2>{{ dos_alerts }}</h2>
+
+    </div>
+
+    <div class="card">
+
+        <h3>Port Scans</h3>
+
+        <h2>{{ portscan_alerts }}</h2>
+
+    </div>
+
+    <div class="card">
+
+        <h3>Trusted Hosts</h3>
+
+        <h2>{{ trusted_hosts }}</h2>
+
+    </div>
+
+    <div class="card">
+
+        <h3>Blacklisted Hosts</h3>
+
+        <h2>{{ blacklist_count }}</h2>
+
+    </div>
+
+</div>
+
+
+<div class="charts">
+
+    <div class="chart-card">
+
+        <h3>Alerts Per IP</h3>
+
+        <img src="{{ url_for('static', filename='alerts_per_ip.png') }}"
+             width="100%">
+
+    </div>
+
+    <div class="chart-card">
+
+        <h3>Attack Distribution</h3>
+
+        <img src="{{ url_for('static', filename='attack_distribution.png') }}"
+             width="100%">
+
+    </div>
+
+</div>
+
+
+
+<div class="tables">
+
+<div class="table-card">
+
+<h3>Recent Alerts</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Timestamp</th>
+
+<th>Source IP</th>
+
+<th>Attack Type</th>
+
+<th>Value</th>
+
+<th>Severity</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% if alerts %}
+
+{% for alert in alerts %}
+
+<tr>
+
+<td>{{ alert.timestamp }}</td>
+
+<td>{{ alert.ip }}</td>
+
+<td>{{ alert.type }}</td>
+
+<td>{{ alert.value }}</td>
+
+<td>
+
+{% if alert.severity=="High" %}
+
+<span class="badge high">
+
+{{ alert.severity }}
+
+</span>
+
+{% elif alert.severity=="Medium" %}
+
+<span class="badge medium">
+
+{{ alert.severity }}
+
+</span>
+
+{% else %}
+
+<span class="badge low">
+
+{{ alert.severity }}
+
+</span>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+{% else %}
+
+<tr>
+
+<td colspan="5">
+
+No alerts detected.
+
+</td>
+
+</tr>
+
+{% endif %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<div class="table-card">
+
+<h3>Trusted Hosts</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Name</th>
+
+<th>IP Address</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for host in whitelist %}
+
+<tr>
+
+<td>{{ host.name }}</td>
+
+<td>{{ host.ip }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<div class="table-card">
+
+<h3>Blacklisted Hosts</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>IP Address</th>
+
+<th>Reason</th>
+
+<th>Detected</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% if blacklist %}
+
+{% for host in blacklist %}
+
+<tr>
+
+<td>{{ host.ip }}</td>
+
+<td>{{ host.reason }}</td>
+
+<td>{{ host.time }}</td>
+
+</tr>
+
+{% endfor %}
+
+{% else %}
+
+<tr>
+
+<td colspan="3">
+
+No blacklisted hosts.
+
+</td>
+
+</tr>
+
+{% endif %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+
+</script>
+
+
+</body>
+
+</html>

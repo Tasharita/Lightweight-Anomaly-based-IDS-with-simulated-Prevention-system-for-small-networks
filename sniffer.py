@@ -2,7 +2,7 @@ from scapy.all import sniff, IP, TCP, UDP
 
 def process_packet(packet):
     if IP in packet:
-        scr_ip = packet[IP].scr
+        src_ip = packet[IP].src
         dst_ip = packet[IP].dst
         proto = "TCP" if TCP in packet else "UDP" if UDP in packet else " OTHER"
         size = len(packet)
