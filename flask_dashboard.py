@@ -1,17 +1,17 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, jsonify
 import pandas as pd
 import os
 from datetime import datetime
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
+import subprocess
 
 app = Flask(__name__)
+ids_process = None
 
-
-ALERT_FILE = "alerts.csv"
-WHITELIST_FILE = "whitelist.txt"
+ALERT_FILE = "/home/tasha/ids_project/alerts.csv"
+WHITELIST_FILE = "/home/tasha/ids_project/whitelist.txt"
 
 
 def load_whitelist():
@@ -239,7 +239,51 @@ def dashboard():
 
     )
 
+@app.route("/start")
+def start_ids():
+    global ids_process
+    if ids_process is None or ids_process.poll() is not None:
+        ids_process = subprocess.Popen(
+            ["sudo", "python3", "ids.py"],
+            cwd="/home/tasha/ids_project"
+        )
+        print("[*] IDS started")
+    return redirect("/")
 
+@app.route("/stop")
+def stop_ids():
+    global ids_process
+    if ids_process:
+        ids_process.terminate()
+        ids_process = None
+    return redirect("/")
+
+
+@app.route("/status")
+def status():
+    global ids_process
+    running = ids_process is not None and ids_process.poll() is None
+    return jsonify({"running": running})
+
+@app.route("/data")
+def data():
+    df = load_alerts()
+    dos_alerts = 0
+    portscan_alerts = 0
+    blacklist_count = 0
+
+    if not df.empty:
+        dos_alerts = len(df[df["Anomaly Type"].str.contains("DOS", case=False)])
+        portscan_alerts = len(df[df["Anomaly Type"].str.contains("PORT", case=False)])
+        blacklist_count = len(df["Source IP"].unique())
+
+    return jsonify({
+        "total_alerts": len(df),
+        "dos_alerts": dos_alerts,
+        "portscan_alerts": portscan_alerts,
+        "blacklist_count": blacklist_count,
+        "last_updated": datetime.now().strftime("%H:%M:%S")
+    })
 
 if __name__ == "__main__":
 

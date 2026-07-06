@@ -211,3 +211,111 @@ tr:hover{
     }
 
 }
+.control-panel{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#ffffff;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:25px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.status-box h3{
+    margin:0;
+    font-size:18px;
+}
+
+.status{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.status.running{
+    color:#2e7d32;
+}
+
+.status.stopped{
+    color:#c62828;
+}
+
+.buttons{
+    display:flex;
+    gap:15px;
+}
+
+.buttons button{
+
+    padding:12px 22px;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:bold;
+
+    transition:.2s;
+}
+
+#startBtn{
+
+    background:#2e7d32;
+
+    color:white;
+}
+
+#startBtn:hover{
+
+    background:#256428;
+}
+
+#stopBtn{
+
+    background:#c62828;
+
+    color:white;
+}
+
+#stopBtn:hover{
+
+    background:#a41d1d;
+}
+button:disabled{
+
+    opacity:.45;
+
+    cursor:not-allowed;
+
+}
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+.btn-start {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+.btn-stop {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+.btn-start:hover { background: #219a52; }
+.btn-stop:hover { background: #c0392b; }

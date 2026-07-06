@@ -1,319 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Lightweight IDS Dashboard</title>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-
 </head>
-
 <body>
-
 <div class="header">
-
     <div>
-
         <h1>🛡 Lightweight Anomaly-Based IDS</h1>
-
         <p>Network Monitoring Dashboard</p>
-
     </div>
-
     <div class="status">
-
-        <span class="status-dot"></span>
-
-        Monitoring Active
-
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Checking...</span>
         <br>
-
-        <small>Last Updated: {{ last_updated }}</small>
-
+        <small>Last Updated: <span id="last-updated">--</span></small>
     </div>
-
+    <div class="controls">
+        <button class="btn-start" id="btn-start" onclick="startIDS()">▶ Start IDS</button>
+        <button class="btn-stop" id="btn-stop" onclick="stopIDS()">■ Stop IDS</button>
+    </div>
 </div>
-
-
 
 <div class="cards">
-
     <div class="card">
-
         <h3>Total Alerts</h3>
-
-        <h2>{{ total_alerts }}</h2>
-
+        <h2 id="total-alerts">{{ total_alerts }}</h2>
     </div>
-
     <div class="card">
-
         <h3>DoS Alerts</h3>
-
-        <h2>{{ dos_alerts }}</h2>
-
+        <h2 id="dos-alerts">{{ dos_alerts }}</h2>
     </div>
-
     <div class="card">
-
         <h3>Port Scans</h3>
-
-        <h2>{{ portscan_alerts }}</h2>
-
+        <h2 id="portscan-alerts">{{ portscan_alerts }}</h2>
     </div>
-
     <div class="card">
-
         <h3>Trusted Hosts</h3>
-
         <h2>{{ trusted_hosts }}</h2>
-
     </div>
-
     <div class="card">
-
         <h3>Blacklisted Hosts</h3>
-
-        <h2>{{ blacklist_count }}</h2>
-
+        <h2 id="blacklist-count">{{ blacklist_count }}</h2>
     </div>
-
 </div>
-
 
 <div class="charts">
-
     <div class="chart-card">
-
         <h3>Alerts Per IP</h3>
-
-        <img src="{{ url_for('static', filename='alerts_per_ip.png') }}"
-             width="100%">
-
+        <img id="chart-ip" src="{{ url_for('static', filename='alerts_per_ip.png') }}?t={{ last_updated }}" width="100%">
     </div>
-
     <div class="chart-card">
-
         <h3>Attack Distribution</h3>
-
-        <img src="{{ url_for('static', filename='attack_distribution.png') }}"
-             width="100%">
-
+        <img id="chart-dist" src="{{ url_for('static', filename='attack_distribution.png') }}?t={{ last_updated }}" width="100%">
     </div>
-
 </div>
-
-
 
 <div class="tables">
-
 <div class="table-card">
-
 <h3>Recent Alerts</h3>
-
 <table>
-
 <thead>
-
 <tr>
-
 <th>Timestamp</th>
-
 <th>Source IP</th>
-
 <th>Attack Type</th>
-
 <th>Value</th>
-
 <th>Severity</th>
-
 </tr>
-
 </thead>
-
-<tbody>
-
+<tbody id="alerts-table">
 {% if alerts %}
-
 {% for alert in alerts %}
-
 <tr>
-
 <td>{{ alert.timestamp }}</td>
-
 <td>{{ alert.ip }}</td>
-
 <td>{{ alert.type }}</td>
-
 <td>{{ alert.value }}</td>
-
 <td>
-
 {% if alert.severity=="High" %}
-
-<span class="badge high">
-
-{{ alert.severity }}
-
-</span>
-
+<span class="badge high">{{ alert.severity }}</span>
 {% elif alert.severity=="Medium" %}
-
-<span class="badge medium">
-
-{{ alert.severity }}
-
-</span>
-
+<span class="badge medium">{{ alert.severity }}</span>
 {% else %}
-
-<span class="badge low">
-
-{{ alert.severity }}
-
-</span>
-
+<span class="badge low">{{ alert.severity }}</span>
 {% endif %}
-
 </td>
-
 </tr>
-
 {% endfor %}
-
 {% else %}
-
-<tr>
-
-<td colspan="5">
-
-No alerts detected.
-
-</td>
-
-</tr>
-
+<tr><td colspan="5">No alerts detected.</td></tr>
 {% endif %}
-
 </tbody>
-
 </table>
-
 </div>
 
-
-
 <div class="table-card">
-
 <h3>Trusted Hosts</h3>
-
 <table>
-
 <thead>
-
 <tr>
-
 <th>Name</th>
-
 <th>IP Address</th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 {% for host in whitelist %}
-
 <tr>
-
 <td>{{ host.name }}</td>
-
 <td>{{ host.ip }}</td>
-
 </tr>
-
 {% endfor %}
-
 </tbody>
-
 </table>
-
 </div>
-
-
 
 <div class="table-card">
-
 <h3>Blacklisted Hosts</h3>
-
 <table>
-
 <thead>
-
 <tr>
-
 <th>IP Address</th>
-
 <th>Reason</th>
-
 <th>Detected</th>
-
 </tr>
-
 </thead>
-
-<tbody>
-
+<tbody id="blacklist-table">
 {% if blacklist %}
-
 {% for host in blacklist %}
-
 <tr>
-
 <td>{{ host.ip }}</td>
-
 <td>{{ host.reason }}</td>
-
 <td>{{ host.time }}</td>
-
 </tr>
-
 {% endfor %}
-
 {% else %}
-
-<tr>
-
-<td colspan="3">
-
-No blacklisted hosts.
-
-</td>
-
-</tr>
-
+<tr><td colspan="3">No blacklisted hosts.</td></tr>
 {% endif %}
-
 </tbody>
-
 </table>
-
+</div>
 </div>
 
-</div>
+<script>
+function startIDS() {
+    var btn = document.getElementById("btn-start");
+    btn.disabled = true;
+    btn.textContent = "Starting...";
+    fetch("/start").then(function() {
+        btn.textContent = "▶ Running";
+        updateStatus();
+    });
+}
 
+function stopIDS() {
+    var btn = document.getElementById("btn-stop");
+    btn.disabled = true;
+    btn.textContent = "Stopping...";
+    fetch("/stop").then(function() {
+        document.getElementById("btn-start").disabled = false;
+        document.getElementById("btn-start").textContent = "▶ Start IDS";
+        btn.disabled = false;
+        btn.textContent = "■ Stop IDS";
+        updateStatus();
+    });
+}
 
+function updateStatus() {
+    fetch("/status")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var dot = document.getElementById("status-dot");
+            var text = document.getElementById("status-text");
+            if (data.running) {
+                dot.style.background = "#2ecc71";
+                text.textContent = "Monitoring Active";
+                document.getElementById("btn-start").disabled = true;
+                document.getElementById("btn-start").textContent = "▶ Running";
+                document.getElementById("btn-stop").disabled = false;
+            } else {
+                dot.style.background = "#e74c3c";
+                text.textContent = "IDS Stopped";
+                document.getElementById("btn-start").disabled = false;
+                document.getElementById("btn-start").textContent = "▶ Start IDS";
+            }
+        });
+}
 
+function refreshData() {
+    fetch("/data")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById("total-alerts").textContent = data.total_alerts;
+            document.getElementById("dos-alerts").textContent = data.dos_alerts;
+            document.getElementById("portscan-alerts").textContent = data.portscan_alerts;
+            document.getElementById("blacklist-count").textContent = data.blacklist_count;
+            document.getElementById("last-updated").textContent = data.last_updated;
+
+            // refresh charts with cache busting
+            var t = new Date().getTime();
+            document.getElementById("chart-ip").src = "/static/alerts_per_ip.png?t=" + t;
+            document.getElementById("chart-dist").src = "/static/attack_distribution.png?t=" + t;
+        });
+}
+
+// check status and refresh data every 3 seconds
+setInterval(function() {
+    updateStatus();
+    refreshData();
+}, 3000);
+
+// run on load
+updateStatus();
 </script>
 
-
 </body>
-
 </html>
+

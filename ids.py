@@ -11,14 +11,20 @@ WHITELIST_FILE = "whitelist.txt"
 def load_whitelist():
     if os.path.exists(WHITELIST_FILE):
         with open(WHITELIST_FILE, "r") as f:
-            return {line.strip() for line in f if line.strip()}
+            ips = set()
+            for line in f:
+                line = line.strip()
+                if line:
+                    ip = line.split(",")[0].strip()
+                    ips.add(ip)
+            return ips
     return set()
 
 WHITELIST = load_whitelist()
-
+print(f"Loaded whitelist: {WHITELIST}")
 # --- Thresholds ---
-PACKET_THRESHOLD = 500   # packets per 10 seconds -> DoS detection
-PORT_THRESHOLD = 100     # unique ports per 10 seconds -> port scan detection
+PACKET_THRESHOLD = 50   # packets per 10 seconds -> DoS detection
+PORT_THRESHOLD = 50     # unique ports per 10 seconds -> port scan detection
 TIME_WINDOW = 10         # seconds
 
 # --- counters ----
@@ -28,8 +34,6 @@ blacklist = set()
 blocked_notice_shown = set()
 alerts = []
 
-# --- Whitelist ----
-WHITELIST = {"192.168.56.105", "192.168.56.107", "192.168.56.1"}
 
 # ---lock for thread safety ---
 lock = threading.Lock()
@@ -38,6 +42,7 @@ window_start = time.time()
 
 # --- Log Alert to CSV ---
 def log_alert(ip, anomaly_type, value):
+    print(">>> LOG ALERT CALLED")
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     alert = {
         "Timestamp": timestamp,
@@ -47,10 +52,10 @@ def log_alert(ip, anomaly_type, value):
     }
     alerts.append(alert)
     df = pd.DataFrame([alert])
-    if not os.path.exists("alerts.csv"):
-        df.to_csv("alerts.csv", index=False)
+    if not os.path.exists("/home/tasha/ids_project/alerts.csv"):
+        df.to_csv("/home/tasha/ids_project/alerts.csv", index=False)
     else:
-        df.to_csv("alerts.csv", mode="a", header=False, index=False)
+        df.to_csv("/home/tasha/ids_project/alerts.csv", mode="a", header=False, index=False)
     print("\n[ALERT]" + timestamp + "|" + ip + "|" + anomaly_type + "| Value:" + str(value))
     print(f"[BLACKLIST]" + ip + " has been flagged and blacklisted")
 
@@ -126,6 +131,7 @@ def check_thresholds():
                 packet_count
             )
 
+
 # --- Main ---
 print("=" * 60)
 print("      Lightweight Anomaly-Based IDS")
@@ -158,3 +164,5 @@ except KeyboardInterrupt:
 
     print(f"[*] Blacklisted IPs: {len(blacklist)}")
     print("[*] IDS stopped")
+
+

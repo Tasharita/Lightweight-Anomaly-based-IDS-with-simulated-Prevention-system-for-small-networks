@@ -1,2 +1,4 @@
 alerts.csv
 *.swp
+__pycache__/
+*.pyc
