@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, jsonify
+from flask import Flask, render_template, redirect, jsonify, request, session
 import pandas as pd
 import os
 from datetime import datetime
@@ -6,8 +6,24 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import subprocess
+from functools import wraps
+
 
 app = Flask(__name__)
+app.secret_key = "ids_secret_key_2025"
+
+# Login credentials
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "ids1234"
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated
+
 ids_process = None
 
 ALERT_FILE = "/home/tasha/ids_project/alerts.csv"
@@ -55,6 +71,7 @@ def load_alerts():
 
 
 @app.route("/")
+@login_required
 def dashboard():
 
     df = load_alerts()
@@ -240,6 +257,7 @@ def dashboard():
     )
 
 @app.route("/start")
+@login_required
 def start_ids():
     global ids_process
     if ids_process is None or ids_process.poll() is not None:
@@ -251,6 +269,7 @@ def start_ids():
     return redirect("/")
 
 @app.route("/stop")
+@login_required
 def stop_ids():
     global ids_process
     if ids_process:
@@ -260,33 +279,84 @@ def stop_ids():
 
 
 @app.route("/status")
+@login_required
 def status():
     global ids_process
     running = ids_process is not None and ids_process.poll() is None
     return jsonify({"running": running})
 
+
 @app.route("/data")
+@login_required
 def data():
     df = load_alerts()
     dos_alerts = 0
     portscan_alerts = 0
     blacklist_count = 0
+    alerts_html = ""
+    blacklist_html = ""
 
     if not df.empty:
         dos_alerts = len(df[df["Anomaly Type"].str.contains("DOS", case=False)])
         portscan_alerts = len(df[df["Anomaly Type"].str.contains("PORT", case=False)])
         blacklist_count = len(df["Source IP"].unique())
 
+        for _, row in df.iloc[::-1].iterrows():
+            anomaly = str(row["Anomaly Type"])
+            value = int(row["Value"])
+            if "DOS" in anomaly:
+                severity = "High" if value >= 2000 else "Medium" if value >= 1000 else "Low"
+            else:
+                severity = "High"
+            badge = f'<span class="badge {severity.lower()}">{severity}</span>'
+            alerts_html += f"<tr><td>{row['Timestamp']}</td><td>{row['Source IP']}</td><td>{anomaly}</td><td>{value}</td><td>{badge}</td></tr>"
+
+        seen = set()
+        for _, row in df.iterrows():
+            ip = row["Source IP"]
+            if ip not in seen:
+                blacklist_html += f"<tr><td>{ip}</td><td>{row['Anomaly Type']}</td><td>{row['Timestamp']}</td></tr>"
+                seen.add(ip)
+
     return jsonify({
         "total_alerts": len(df),
         "dos_alerts": dos_alerts,
         "portscan_alerts": portscan_alerts,
         "blacklist_count": blacklist_count,
-        "last_updated": datetime.now().strftime("%H:%M:%S")
+        "last_updated": datetime.now().strftime("%H:%M:%S"),
+        "alerts_html": alerts_html if alerts_html else "<tr><td colspan='5'>No alerts detected.</td></tr>",
+        "blacklist_html": blacklist_html if blacklist_html else "<tr><td colspan='3'>No blacklisted hosts.</td></tr>"
     })
 
-if __name__ == "__main__":
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["logged_in"] = True
+            return redirect("/")
+        else:
+            error = "Invalid username or password"
+    return render_template("login.html", error=error)
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
+
+if __name__ == "__main__":
+    import webbrowser
+    import threading
+
+    def open_browser():
+        import time
+        time.sleep(1.5)
+        webbrowser.open("http://localhost:5000")
+
+    threading.Thread(target=open_browser).start()
     app.run(
         host="0.0.0.0",
         port=5000,

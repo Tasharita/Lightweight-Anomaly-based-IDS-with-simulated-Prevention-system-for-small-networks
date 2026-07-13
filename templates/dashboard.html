@@ -21,6 +21,7 @@
     <div class="controls">
         <button class="btn-start" id="btn-start" onclick="startIDS()">▶ Start IDS</button>
         <button class="btn-stop" id="btn-stop" onclick="stopIDS()">■ Stop IDS</button>
+        <a href="/logout"><button class="btn-logout">⏻ Logout</button></a>
     </div>
 </div>
 
@@ -198,13 +199,15 @@ function refreshData() {
             document.getElementById("portscan-alerts").textContent = data.portscan_alerts;
             document.getElementById("blacklist-count").textContent = data.blacklist_count;
             document.getElementById("last-updated").textContent = data.last_updated;
+            document.getElementById("alerts-table").innerHTML = data.alerts_html;
+            document.getElementById("blacklist-table").innerHTML = data.blacklist_html;
 
-            // refresh charts with cache busting
             var t = new Date().getTime();
             document.getElementById("chart-ip").src = "/static/alerts_per_ip.png?t=" + t;
             document.getElementById("chart-dist").src = "/static/attack_distribution.png?t=" + t;
         });
 }
+
 
 // check status and refresh data every 3 seconds
 setInterval(function() {

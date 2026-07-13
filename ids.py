@@ -25,7 +25,7 @@ print(f"Loaded whitelist: {WHITELIST}")
 # --- Thresholds ---
 PACKET_THRESHOLD = 50   # packets per 10 seconds -> DoS detection
 PORT_THRESHOLD = 50     # unique ports per 10 seconds -> port scan detection
-TIME_WINDOW = 10         # seconds
+TIME_WINDOW = 5         # seconds
 
 # --- counters ----
 packet_counts = defaultdict(int)
@@ -89,11 +89,14 @@ def process_packet(packet):
             elif UDP in packet:
                 port_tracker[src].add(packet[UDP].dport)
 
+            check_thresholds()
+
+
             # Check thresholds every time window
             if time.time() - window_start >= TIME_WINDOW:
-                check_thresholds()
                 packet_counts.clear()
                 port_tracker.clear()
+                blacklist.clear()
                 window_start = time.time()
 
 

@@ -319,3 +319,90 @@ button:disabled{
 }
 .btn-start:hover { background: #219a52; }
 .btn-stop:hover { background: #c0392b; }
+.login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f6f9;
+}
+.login-box {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    width: 380px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.login-header h1 {
+    font-size: 48px;
+}
+.login-header h2 {
+    color: #2c3e50;
+    margin-top: 10px;
+}
+.login-header p {
+    color: #7f8c8d;
+    font-size: 13px;
+    margin-top: 5px;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+}
+.form-group input:focus {
+    border-color: #3498db;
+}
+.btn-login {
+    width: 100%;
+    padding: 13px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-login:hover {
+    background: #34495e;
+}
+.login-error {
+    background: #fdecea;
+    color: #e74c3c;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    border-left: 4px solid #e74c3c;
+}
+.btn-logout {
+    background: #7f8c8d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+.btn-logout:hover { background: #636e72; }
