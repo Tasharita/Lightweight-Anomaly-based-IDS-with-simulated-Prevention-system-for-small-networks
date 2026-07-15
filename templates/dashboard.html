@@ -43,20 +43,53 @@
         <h2>{{ trusted_hosts }}</h2>
     </div>
     <div class="card">
-        <h3>Blacklisted Hosts</h3>
-        <h2 id="blacklist-count">{{ blacklist_count }}</h2>
+        <h3>Blocked Hosts</h3>
+        <h2 id="blocked-count">{{ blocked_count }}</h2>
     </div>
 </div>
 
 <div class="charts">
     <div class="chart-card">
-        <h3>Alerts Per IP</h3>
-        <img id="chart-ip" src="{{ url_for('static', filename='alerts_per_ip.png') }}?t={{ last_updated }}" width="100%">
-    </div>
-    <div class="chart-card">
         <h3>Attack Distribution</h3>
         <img id="chart-dist" src="{{ url_for('static', filename='attack_distribution.png') }}?t={{ last_updated }}" width="100%">
     </div>
+    <div class="chart-card">
+    <h3>Blocked Hosts</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>IP Address</th>
+                <th>Reason</th>
+                <th>Detected</th>
+            </tr>
+        </thead>
+
+        <tbody id="blocked-chart-table">
+
+        {% if blacklist %}
+
+            {% for host in blacklist %}
+            <tr>
+                <td>{{ host.ip }}</td>
+                <td>{{ host.reason }}</td>
+                <td>{{ host.time }}</td>
+            </tr>
+            {% endfor %}
+
+        {% else %}
+
+            <tr>
+                <td colspan="3">No blocked hosts.</td>
+            </tr>
+
+        {% endif %}
+
+        </tbody>
+
+    </table>
+
+</div>
 </div>
 
 <div class="tables">
@@ -68,8 +101,7 @@
 <th>Timestamp</th>
 <th>Source IP</th>
 <th>Attack Type</th>
-<th>Value</th>
-<th>Severity</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody id="alerts-table">
@@ -79,25 +111,17 @@
 <td>{{ alert.timestamp }}</td>
 <td>{{ alert.ip }}</td>
 <td>{{ alert.type }}</td>
-<td>{{ alert.value }}</td>
 <td>
-{% if alert.severity=="High" %}
-<span class="badge high">{{ alert.severity }}</span>
-{% elif alert.severity=="Medium" %}
-<span class="badge medium">{{ alert.severity }}</span>
-{% else %}
-<span class="badge low">{{ alert.severity }}</span>
-{% endif %}
+<span class="badge blocked">Blocked</span>
 </td>
 </tr>
 {% endfor %}
 {% else %}
-<tr><td colspan="5">No alerts detected.</td></tr>
+<tr><td colspan="4">No alerts detected.</td></tr>
 {% endif %}
 </tbody>
 </table>
 </div>
-
 <div class="table-card">
 <h3>Trusted Hosts</h3>
 <table>
@@ -118,32 +142,6 @@
 </table>
 </div>
 
-<div class="table-card">
-<h3>Blacklisted Hosts</h3>
-<table>
-<thead>
-<tr>
-<th>IP Address</th>
-<th>Reason</th>
-<th>Detected</th>
-</tr>
-</thead>
-<tbody id="blacklist-table">
-{% if blacklist %}
-{% for host in blacklist %}
-<tr>
-<td>{{ host.ip }}</td>
-<td>{{ host.reason }}</td>
-<td>{{ host.time }}</td>
-</tr>
-{% endfor %}
-{% else %}
-<tr><td colspan="3">No blacklisted hosts.</td></tr>
-{% endif %}
-</tbody>
-</table>
-</div>
-</div>
 
 <script>
 function startIDS() {
@@ -200,10 +198,9 @@ function refreshData() {
             document.getElementById("blacklist-count").textContent = data.blacklist_count;
             document.getElementById("last-updated").textContent = data.last_updated;
             document.getElementById("alerts-table").innerHTML = data.alerts_html;
-            document.getElementById("blacklist-table").innerHTML = data.blacklist_html;
+            document.getElementById("blocked-chart-table").innerHTML = data.blacklist_html;
 
             var t = new Date().getTime();
-            document.getElementById("chart-ip").src = "/static/alerts_per_ip.png?t=" + t;
             document.getElementById("chart-dist").src = "/static/attack_distribution.png?t=" + t;
         });
 }

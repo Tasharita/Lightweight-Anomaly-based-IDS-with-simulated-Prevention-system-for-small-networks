@@ -406,3 +406,7 @@ button:disabled{
     font-weight: bold;
 }
 .btn-logout:hover { background: #636e72; }
+.badge.blocked{
+    background:#27ae60;
+    color:white;
+}

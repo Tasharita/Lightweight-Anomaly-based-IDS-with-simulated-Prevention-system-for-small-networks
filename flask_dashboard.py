@@ -85,7 +85,6 @@ def dashboard():
     alerts = []
     blacklist = []
 
-    alerts_per_ip = {}
     attack_distribution = {
         "Port Scan": 0,
         "DoS": 0
@@ -101,11 +100,6 @@ def dashboard():
             df[df["Anomaly Type"].str.contains("PORT", case=False)]
         )
 
-        alerts_per_ip = (
-            df["Source IP"]
-            .value_counts()
-            .to_dict()
-        )
 
         attack_distribution = {
             "Port Scan": portscan_alerts,
@@ -117,29 +111,12 @@ def dashboard():
         for _, row in df.iterrows():
 
             anomaly = str(row["Anomaly Type"])
-            value = int(row["Value"])
-
-            if anomaly == "DOS / TRAFFIC SPIKE":
-
-                if value >= 2000:
-                    severity = "High"
-
-                elif value >= 1000:
-                    severity = "Medium"
-
-                else:
-                    severity = "Low"
-
-            else:
-                severity = "High"
 
             alerts.append({
 
                 "timestamp": row["Timestamp"],
                 "ip": row["Source IP"],
                 "type": anomaly,
-                "value": value,
-                "severity": severity
 
             })
 
@@ -157,39 +134,6 @@ def dashboard():
 
                 seen.add(ip)
 
-    # ===============================
-    # Generate Alerts Per IP Graph
-    # ===============================
-
-    plt.figure(figsize=(6,4))
-
-    if alerts_per_ip:
-
-        plt.bar(
-            alerts_per_ip.keys(),
-            alerts_per_ip.values(),
-            color="#4F81BD"
-        )
-
-        plt.title("Alerts Per Source IP")
-        plt.ylabel("Number of Alerts")
-        plt.grid(axis="y", linestyle="--", alpha=0.4)
-
-    else:
-
-        plt.text(
-            0.5,
-            0.5,
-            "No Alerts",
-            ha="center",
-            fontsize=14
-        )
-
-    plt.tight_layout()
-
-    plt.savefig("static/alerts_per_ip.png")
-
-    plt.close()
 
 
     # ===============================
@@ -244,7 +188,7 @@ def dashboard():
 
         trusted_hosts=len(whitelist),
 
-        blacklist_count=len(blacklist),
+        blocked_count=len(blacklist),
 
         whitelist=whitelist,
 
@@ -309,8 +253,14 @@ def data():
             else:
                 severity = "High"
             badge = f'<span class="badge {severity.lower()}">{severity}</span>'
-            alerts_html += f"<tr><td>{row['Timestamp']}</td><td>{row['Source IP']}</td><td>{anomaly}</td><td>{value}</td><td>{badge}</td></tr>"
-
+            alerts_html += (
+                f"<tr>"
+                f"<td>{row['Timestamp']}</td>"
+                f"<td>{row['Source IP']}</td>"
+                f"<td>{anomaly}</td>"
+                f"<td><span class='badge blocked'>Blocked</span></td>"
+                f"</tr>"
+            )
         seen = set()
         for _, row in df.iterrows():
             ip = row["Source IP"]
@@ -324,7 +274,7 @@ def data():
         "portscan_alerts": portscan_alerts,
         "blacklist_count": blacklist_count,
         "last_updated": datetime.now().strftime("%H:%M:%S"),
-        "alerts_html": alerts_html if alerts_html else "<tr><td colspan='5'>No alerts detected.</td></tr>",
+        "alerts_html": alerts_html if alerts_html else "<tr><td colspan='4'>No alerts detected.</td></tr>",
         "blacklist_html": blacklist_html if blacklist_html else "<tr><td colspan='3'>No blacklisted hosts.</td></tr>"
     })
 

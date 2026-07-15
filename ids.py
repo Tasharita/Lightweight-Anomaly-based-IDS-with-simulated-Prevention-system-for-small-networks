@@ -4,6 +4,7 @@ import time
 import threading
 import pandas as pd
 import os
+import subprocess
 
 # ── LOAD WHITELIST ──
 WHITELIST_FILE = "whitelist.txt"
@@ -59,6 +60,25 @@ def log_alert(ip, anomaly_type, value):
     print("\n[ALERT]" + timestamp + "|" + ip + "|" + anomaly_type + "| Value:" + str(value))
     print(f"[BLACKLIST]" + ip + " has been flagged and blacklisted")
 
+
+def block_ip(ip):
+
+    try:
+        subprocess.run([
+            "iptables",
+            "-A",
+            "INPUT",
+            "-s",
+            ip,
+            "-j",
+            "DROP"
+        ], check=True)
+
+        print(f"[BLOCKED] {ip} has been blocked using iptables")
+
+    except Exception as e:
+        print(f"[ERROR] Failed to block {ip}: {e}")
+
 # --- Packet Handler ---
 def process_packet(packet):
     global window_start
@@ -83,56 +103,35 @@ def process_packet(packet):
             if TCP in packet:
 
                 # Only count SYN packets
-                if packet[TCP].flags == 0x02:
-                    port_tracker[src].add(packet[TCP].dport)
+                port_tracker[src].add(packet[TCP].dport)
 
             elif UDP in packet:
                 port_tracker[src].add(packet[UDP].dport)
 
-            check_thresholds()
+            # ----- Immediate Port Scan Detection -----
+            if len(port_tracker[src]) >= PORT_THRESHOLD:
 
+                blacklist.add(src)
+                block_ip(src)
+                log_alert(src, "PORT SCAN", len(port_tracker[src]))
+
+                return
+
+
+            # ----- Immediate DoS Detection -----
+            if packet_counts[src] >= PACKET_THRESHOLD:
+
+                blacklist.add(src)
+                block_ip(src)
+                log_alert(src, "DOS / TRAFFIC SPIKE", packet_counts[src])
+
+                return
 
             # Check thresholds every time window
             if time.time() - window_start >= TIME_WINDOW:
                 packet_counts.clear()
                 port_tracker.clear()
-                blacklist.clear()
                 window_start = time.time()
-
-
-# --- Detection logic ---
-def check_thresholds():
-
-    for ip in packet_counts:
-
-        packet_count = packet_counts[ip]
-        unique_ports = len(port_tracker[ip])
-
-        # Skip already blacklisted IPs
-        if ip in blacklist:
-            continue
-
-        # ---- Port Scan Detection (Priority) ----
-        if unique_ports > PORT_THRESHOLD:
-
-            blacklist.add(ip)
-
-            log_alert(
-                ip,
-                "PORT SCAN",
-                unique_ports
-            )
-
-        # ---- DoS Detection ----
-        elif packet_count > PACKET_THRESHOLD:
-
-            blacklist.add(ip)
-
-            log_alert(
-                ip,
-                "DOS / TRAFFIC SPIKE",
-                packet_count
-            )
 
 
 # --- Main ---
