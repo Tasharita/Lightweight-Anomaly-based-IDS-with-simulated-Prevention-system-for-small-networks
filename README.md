@@ -104,8 +104,8 @@ sudo hping3 --flood -S -p 80 <workstation-ip>
 
 | Attack Type | Threshold | Time Window |
 |-------------|-----------|-------------|
-| TCP SYN Flood (DoS) | 50 packets | 10 seconds |
-| TCP SYN Port Scan | 20 unique destination ports | 10 seconds |
+| TCP SYN Flood (DoS) | 50 packets | 5 seconds |
+| TCP SYN Port Scan | 20 unique destination ports | 5 seconds |
 
 The threshold values were determined through baseline traffic observation and experimental testing to achieve a balance between detection sensitivity and false positives.
 
