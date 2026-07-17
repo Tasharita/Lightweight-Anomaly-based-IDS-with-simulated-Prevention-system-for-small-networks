@@ -25,7 +25,7 @@ WHITELIST = load_whitelist()
 print(f"Loaded whitelist: {WHITELIST}")
 # --- Thresholds ---
 PACKET_THRESHOLD = 50   # packets per 10 seconds -> DoS detection
-PORT_THRESHOLD = 50     # unique ports per 10 seconds -> port scan detection
+PORT_THRESHOLD = 20     # unique ports per 10 seconds -> port scan detection
 TIME_WINDOW = 5         # seconds
 
 # --- counters ----
