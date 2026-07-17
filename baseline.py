@@ -6,7 +6,7 @@ packet_counts = defaultdict(int)
 port_tracker = defaultdict(set)
 
 window_start = time.time()
-WINDOW = 10
+WINDOW = 5
 
 def process_packet(packet):
     global window_start
@@ -31,7 +31,7 @@ def process_packet(packet):
             window_start = time.time()
 
 print("[*] Capturing baseline traffic for 60 seconds...")
-print("[*] Do NOT run any attacks during this time\n")
+print("[*]Generate only normal traffic at this time\n")
 sniff(iface="eth0", prn=process_packet, store=False, timeout=60)
 print("\n[*] Baseline capture complete")
 

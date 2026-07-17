@@ -16,7 +16,7 @@
         <span class="status-dot" id="status-dot"></span>
         <span id="status-text">Checking...</span>
         <br>
-        <small>Last Updated: <span id="last-updated">--</span></small>
+        <small>Last Updated: <span id="last-updated">{{ last_updated }}</span></small>
     </div>
     <div class="controls">
         <button class="btn-start" id="btn-start" onclick="startIDS()">▶ Start IDS</button>
@@ -65,7 +65,7 @@
             </tr>
         </thead>
 
-        <tbody id="blocked-chart-table">
+        <tbody id="blacklist-table">
 
         {% if blacklist %}
 
@@ -197,8 +197,10 @@ function refreshData() {
             document.getElementById("portscan-alerts").textContent = data.portscan_alerts;
             document.getElementById("blacklist-count").textContent = data.blacklist_count;
             document.getElementById("last-updated").textContent = data.last_updated;
+
+
             document.getElementById("alerts-table").innerHTML = data.alerts_html;
-            document.getElementById("blocked-chart-table").innerHTML = data.blacklist_html;
+            document.getElementById("blacklist-table").innerHTML = data.blacklist_html;
 
             var t = new Date().getTime();
             document.getElementById("chart-dist").src = "/static/attack_distribution.png?t=" + t;

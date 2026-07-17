@@ -248,11 +248,6 @@ def data():
         for _, row in df.iloc[::-1].iterrows():
             anomaly = str(row["Anomaly Type"])
             value = int(row["Value"])
-            if "DOS" in anomaly:
-                severity = "High" if value >= 2000 else "Medium" if value >= 1000 else "Low"
-            else:
-                severity = "High"
-            badge = f'<span class="badge {severity.lower()}">{severity}</span>'
             alerts_html += (
                 f"<tr>"
                 f"<td>{row['Timestamp']}</td>"
@@ -267,7 +262,6 @@ def data():
             if ip not in seen:
                 blacklist_html += f"<tr><td>{ip}</td><td>{row['Anomaly Type']}</td><td>{row['Timestamp']}</td></tr>"
                 seen.add(ip)
-
     return jsonify({
         "total_alerts": len(df),
         "dos_alerts": dos_alerts,
